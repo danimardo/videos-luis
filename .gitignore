@@ -1,5 +1,4 @@
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -76,7 +75,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+# public  # Commented out - we need our public directory for the frontend
 
 # Storybook build outputs
 .out
