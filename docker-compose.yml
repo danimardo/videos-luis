@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # MariaDB Database
+  database:
+    image: mariadb:10.11
+    container_name: video-markers-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword123}
+      MYSQL_DATABASE: ${DB_NAME:-video_markers}
+      MYSQL_USER: ${DB_USER:-appuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-apppassword123}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - video-markers-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Video Markers Application
+  app:
+    build: .
+    container_name: video-markers-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: 3011
+      DB_HOST: database
+      DB_USER: ${DB_USER:-appuser}
+      DB_PASSWORD: ${DB_PASSWORD:-apppassword123}
+      DB_NAME: ${DB_NAME:-video_markers}
+    ports:
+      - "${APP_PORT:-3011}:3011"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - video-markers-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3011/markers"]
+      start_period: 30s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: video-markers-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - video-markers-network
+    profiles:
+      - production
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  video-markers-network:
+    driver: bridge
