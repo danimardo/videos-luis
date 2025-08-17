@@ -56,17 +56,17 @@ npm start
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/danimardo/video-markers-app.git
-cd video-markers-app
+git clone https://github.com/danimardo/videos-luis.git
+cd videos-luis
 
 # Configurar variables de entorno
 cp .env.example .env
 
-# Despliegue rápido
-./deploy.sh deploy
+# Despliegue estándar
+docker-compose up -d
 
 # O para producción con Nginx
-./deploy.sh deploy production
+docker-compose --profile production up -d
 ```
 
 ## 🔧 Configuración
@@ -124,23 +124,24 @@ NGINX_SSL_PORT=443
 ### Comandos Docker:
 
 ```bash
-# Desplegar
-./deploy.sh deploy [production]
+# Despliegue estándar
+docker-compose up -d
+
+# Despliegue producción (con Nginx)
+docker-compose --profile production up -d
 
 # Ver logs
-./deploy.sh logs
+docker-compose logs -f
 
 # Estado de servicios
-./deploy.sh status
-
-# Backup de base de datos
-./deploy.sh backup
-
-# Actualizar aplicación
-./deploy.sh update
+docker-compose ps
 
 # Parar servicios
-./deploy.sh stop
+docker-compose down
+
+# Reconstruir y desplegar
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
 ## 📁 Estructura del Proyecto

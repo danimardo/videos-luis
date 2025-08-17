@@ -39,10 +39,6 @@ services:
       DB_NAME: ${DB_NAME:-video_markers}
     ports:
       - "${APP_PORT:-3011}:3011"
-    volumes:
-      # Map application files for development (comment out for production)
-      - ./:/app
-      - /app/node_modules  # Prevent overwriting node_modules from host
     depends_on:
       database:
         condition: service_healthy

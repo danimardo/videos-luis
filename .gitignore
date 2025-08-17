@@ -123,6 +123,4 @@ backup-*.sql
 nginx/ssl/*
 !nginx/ssl/.gitkeep
 
-# Logs directory
-logs/
-!logs/.gitkeep
+
