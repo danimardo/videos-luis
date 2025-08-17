@@ -115,8 +115,9 @@ Thumbs.db
 .dockerignore
 
 # Database backups
-*.sql
 backup-*.sql
+# Allow init-db SQL files
+!init-db/*.sql
 
 # SSL certificates
 nginx/ssl/*
