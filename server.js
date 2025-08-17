@@ -86,5 +86,6 @@ app.delete('/markers/:id', async (req, res) => {
 const PORT = process.env.SERVER_PORT || 3011;
 app.listen(PORT, async () => {
     await initDatabase();
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Video Markers Server running on port ${PORT}`);
+    console.log(`📍 Access the app at: http://localhost:${PORT}`);
 });

@@ -73,8 +73,11 @@ deploy() {
     if [ "$profile" = "production" ]; then
         log_info "Starting services in production mode (with Nginx)..."
         docker-compose --profile production up -d
+    elif [ "$profile" = "development" ] || [ "$profile" = "dev" ]; then
+        log_info "Starting services in development mode (with file mapping)..."
+        docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
     else
-        log_info "Starting services in development mode..."
+        log_info "Starting services in standard mode..."
         docker-compose up -d
     fi
     
@@ -187,7 +190,10 @@ usage() {
     echo "Usage: $0 [COMMAND]"
     echo
     echo "Commands:"
-    echo "  deploy [production]  Deploy the application (add 'production' for production mode)"
+    echo "  deploy [mode]        Deploy the application"
+    echo "                       - no argument: standard mode"
+    echo "                       - 'development' or 'dev': development mode with file mapping"
+    echo "                       - 'production': production mode with Nginx"
     echo "  update              Update the application"
     echo "  backup              Create database backup"
     echo "  logs                Show application logs"
