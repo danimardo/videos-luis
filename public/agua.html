@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contador de agua – 4L</title>
+  <style>
+    :root {
+      --bg: #0f172a;         /* slate-900 */
+      --card: #111827;       /* gray-900 */
+      --muted: #94a3b8;      /* slate-400 */
+      --text: #e5e7eb;       /* gray-200 */
+      --accent: #38bdf8;     /* sky-400 */
+      --accent-2: #22d3ee;   /* cyan-400 */
+      --good: #34d399;       /* emerald-400 */
+      --danger: #f87171;     /* red-400 */
+    }
+    html, body {
+      height: 100%;
+      background: radial-gradient(1200px 800px at 30% -10%, #0b1229, #0f172a 50%, #0b1020 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 24px auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 860px){
+      .wrap { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      padding: 20px;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: .2px; }
+    .muted { color: var(--muted); font-size: 14px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 16px 0 10px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .stat .label { font-size: 12px; color: var(--muted); }
+    .stat .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+    .progress {
+      width: 100%; height: 14px; border-radius: 999px; overflow: hidden;
+      background: rgba(148,163,184,0.2);
+      border: 1px solid rgba(148,163,184,0.25);
+      margin: 10px 0 18px;
+    }
+    .bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .5s ease;
+    }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; }
+    button {
+      appearance: none; border: 0; cursor: pointer; border-radius: 999px;
+      padding: 12px 16px; font-weight: 700; font-size: 14px;
+      background: linear-gradient(180deg, #1f2937, #111827);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 16px rgba(0,0,0,0.4);
+    }
+    button.primary { background: linear-gradient(180deg, #0ea5e9, #0284c7); border-color: rgba(14,165,233,0.6); }
+    button.reset { background: linear-gradient(180deg, #374151, #111827); }
+
+    /* Bidón */
+    .bidon-card { display: grid; place-items: center; }
+    .bidon-wrap { position: relative; width: 240px; height: 380px; }
+    /* Silueta tipo bidón/jerrycan */
+    .bidon {
+      position: absolute; inset: 0; border-radius: 28px 28px 24px 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 2px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .asa { position: absolute; width: 90px; height: 40px; top: 10px; right: 16px;
+      border-radius: 10px; border: 2px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.04);
+    }
+    .tapon { position: absolute; width: 50px; height: 24px; top: -10px; left: 26px;
+      border-radius: 6px; background: #0ea5e9; filter: brightness(0.9);
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+    .water {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 0%;
+      background: linear-gradient(180deg, rgba(56,189,248,0.95), rgba(34,211,238,0.95));
+      box-shadow: inset 0 10px 20px rgba(255,255,255,0.25);
+      transition: height .7s ease;
+    }
+    .wave {
+      position: absolute; left: -25%; right: -25%; top: -18px; height: 36px;
+      background: radial-gradient(18px 18px at 18px 18px, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0) 41%) repeat-x;
+      opacity: .25; animation: move 3.5s linear infinite;
+    }
+    @keyframes move { from { transform: translateX(0); } to { transform: translateX(50%); } }
+
+    .ticks { position: absolute; inset: 0; pointer-events: none; }
+    .tick { position: absolute; left: 8px; right: 8px; height: 1px; background: rgba(255,255,255,0.18); }
+    .tick::after { content: attr(data-label); position: absolute; right: 8px; top: -9px; font-size: 11px; color: var(--muted); background: rgba(2,6,23,0.6); padding: 2px 6px; border-radius: 8px; }
+
+    .hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+<section class="card">
+      <div style="margin-bottom:16px;">
+        <a href="/" class="ghost" style="color:var(--text);text-decoration:none;padding:8px 12px;border-radius:8px;">← Menú</a>
+      </div>
+      <h1>Contador diario de agua</h1>
+      <div class="muted">Objetivo: <strong>4,00 L</strong> • Tamaño botella: <strong>591 ml</strong>. Clic en el bidón o en el botón para sumar.</div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Has bebido</div>
+          <div id="v-bebido" class="value">0,00 L</div>
+        </div>
+        <div class="stat">
+          <div class="label">Te faltan</div>
+          <div id="v-restante" class="value">4,00 L</div>
+        </div>
+        <div class="stat">
+          <div class="label">Porcentaje</div>
+          <div id="v-pct" class="value">0 %</div>
+        </div>
+        <div class="stat">
+          <div class="label">Clicks de 591 ml</div>
+          <div id="v-clicks" class="value">0</div>
+        </div>
+      </div>
+
+      <div class="progress" aria-label="Progreso hacia 4 litros">
+        <div id="bar" class="bar" style="width:0%"></div>
+      </div>
+
+      <div class="controls">
+        <button id="btn-add" class="primary">Beber 591 ml</button>
+        <button id="btn-restar">Deshacer 591 ml</button>
+        <button id="btn-reset" class="reset">Resetear</button>
+      </div>
+    </section>
+
+    <section class="card bidon-card">
+      <div class="bidon-wrap">
+        <div class="tapon" aria-hidden="true"></div>
+        <div id="bidon" class="bidon" role="button" aria-label="Bidón: clic para sumar 591 ml" tabindex="0">
+          <div id="water" class="water">
+            <div class="wave"></div>
+          </div>
+          <div class="ticks" aria-hidden="true" id="ticks"></div>
+        </div>
+      </div>
+      <div class="hint">Clic o tecla Enter en el bidón para añadir <strong>591 ml</strong>.</div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const GOAL_ML = 4000;      // 4 litros
+      const STEP_ML = 591;       // tamaño de la botella
+      const pad = (n) => String(n).padStart(2,'0');
+      const toLitros = (ml) => (ml/1000);
+      const fmtL = (ml) => toLitros(ml).toFixed(2).replace('.', ',') + ' L';
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      const elBebido   = document.getElementById('v-bebido');
+      const elRestante = document.getElementById('v-restante');
+      const elPct      = document.getElementById('v-pct');
+      const elClicks   = document.getElementById('v-clicks');
+      const elBar      = document.getElementById('bar');
+      const elWater    = document.getElementById('water');
+      const elBidon    = document.getElementById('bidon');
+      const elTicks    = document.getElementById('ticks');
+
+      // Marcas cada 1L
+      function renderTicks(){
+        elTicks.innerHTML = '';
+        for(let i=1; i<=4; i++){
+          const pct = (i/4)*100; // altura desde abajo
+          const t = document.createElement('div');
+          t.className = 'tick';
+          t.style.bottom = `calc(${pct}% - 1px)`;
+          t.dataset.label = `${i},00 L`;
+          elTicks.appendChild(t);
+        }
+      }
+
+      let currentMl = Number(localStorage.getItem('waterCurrentMl') || '0');
+
+      function update(){
+        const capped = clamp(currentMl, 0, GOAL_ML);
+        const restante = clamp(GOAL_ML - currentMl, 0, GOAL_ML);
+        const pct = clamp((capped/GOAL_ML)*100, 0, 100);
+
+        elBebido.textContent = fmtL(currentMl);
+        elRestante.textContent = fmtL(restante);
+        elPct.textContent = Math.round(pct) + ' %';
+        elClicks.textContent = Math.floor(currentMl / STEP_ML);
+        elBar.style.width = pct + '%';
+        elWater.style.height = pct + '%';
+
+        localStorage.setItem('waterCurrentMl', String(currentMl));
+        document.title = `Agua ${toLitros(currentMl).toFixed(2)} / 4.00 L`;
+      }
+
+      function add(){ currentMl = clamp(currentMl + STEP_ML, 0, 10000); update(); }
+      function sub(){ currentMl = clamp(currentMl - STEP_ML, 0, 10000); update(); }
+      function reset(){ currentMl = 0; update(); }
+
+      document.getElementById('btn-add').addEventListener('click', add);
+      document.getElementById('btn-restar').addEventListener('click', sub);
+      document.getElementById('btn-reset').addEventListener('click', reset);
+
+      elBidon.addEventListener('click', add);
+      elBidon.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); add(); }});
+
+      renderTicks();
+      update();
+    })();
+  </script>
+</body>
+</html>
